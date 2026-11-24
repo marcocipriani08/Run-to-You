@@ -208,7 +208,7 @@ button:focus-visible { outline: 2px solid var(--lemon); outline-offset: 2px; }
   .hh-left { position: absolute; top: 50%; left: max(28px, calc(var(--sal) + 14px)); transform: translateY(-50%); width: min(46%, 380px); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
   .hr-home .t-eyebrow { font-size: 13px; text-shadow: 2px 2px 0 var(--paper-ink); }
   .hr-home .t-name { font-size: clamp(38px, 6.3vw, 55px); white-space: nowrap; display: inline-flex; align-items: flex-start; gap: 6px; }
-  .hh-heart { image-rendering: pixelated; margin-top: 2px; flex: none; animation: hhBeat 1.1s ease-in-out infinite; filter: drop-shadow(2px 2px 0 var(--paper-ink)); }
+  .hh-heart { image-rendering: pixelated; flex: none; position: relative; top: 0; /* moved by alignHeart() onto the middle of the capital letters */ animation: hhBeat 1.1s ease-in-out infinite; filter: drop-shadow(2px 2px 0 var(--paper-ink)); }
   @keyframes hhBeat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(.96); } 45% { transform: scale(1.12); } }
   .hh-act { width: 300px; max-width: 100%; margin-top: 8px; }
   .hr-home .t-btns { width: 100%; }
@@ -7005,6 +7005,19 @@ const HR_DATA = (() => {
   }
 
   // ---------------------------------------------------------------- title art
+  // the heart beside «Run to You»: its middle on the middle of the capital letters (between their top and the baseline),
+  // measured on the real font, so it stays in line at every size
+  function alignHeart() {
+    const h1 = document.querySelector('.hr-home .t-name'), hc = byId('t-heart'); if (!h1 || !hc || !h1.firstChild) return;
+    const range = document.createRange(); range.selectNodeContents(h1.firstChild); const tr = range.getBoundingClientRect(); if (!tr.height) return;
+    const cs = getComputedStyle(h1), m = document.createElement('canvas').getContext('2d'); m.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const mt = m.measureText('Run to You'), asc = mt.fontBoundingBoxAscent, desc = mt.fontBoundingBoxDescent, cap = m.measureText('R').actualBoundingBoxAscent;
+    if (!asc || !cap) return;
+    const base = tr.top + (tr.height - (asc + desc)) / 2 + asc, mid = base - cap / 2;
+    const hr = hc.getBoundingClientRect(), now = parseFloat(hc.style.top) || 0;   // its middle does not move while it beats
+    const top = Math.round(now + mid - (hr.top + hr.bottom) / 2);
+    if (top !== now) hc.style.top = top + 'px';
+  }
   function paintTitle() {
     // the heart whole, outline included (the canvas takes the size of the sprite)
     const img = VG.item('heart'), cv = byId('t-heart'); cv.width = img.width; cv.height = img.height;
@@ -7024,6 +7037,7 @@ const HR_DATA = (() => {
   const HOME = { t: 0, ob: null, next: 2.2, jf: { y: 0, vy: 0, on: false }, jk: { y: 0, vy: 0, on: false }, hearts: [], dust: [] };
   function drawHome(c, dt) {
     const H = HOME; H.t += dt; G.t += dt; G.cam += dt * 34;
+    if (!(H.t - H.heartAt < 1)) { H.heartAt = H.t; alignHeart(); }   // once a second: after the fonts load, on a resize
     const th = LEVELS[0].theme; if (G.th !== th) { G.th = th; stripsDirty = true; }
     const W = st.VW, VH = st.VH, oy = mapTop(), gy = oy + 160, K = 2, SP = 95;
     drawSky(c);
