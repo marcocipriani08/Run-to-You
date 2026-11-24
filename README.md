@@ -15,4 +15,5 @@ Indirizzo su GitHub Pages: https://marcocipriani08.github.io/Run-to-You/
 
 ## Agganci per i test
 - `?auto=1` avvia l'autopilota.
+- `?trucchi=1` mostra il tasto «Trucchi» (spento per chi gioca).
 - `window.HR` espone `{ G, P, save, LEVELS, go, levelIntro, showBoard, startLevel, setAuto, Bot, pose }`.
