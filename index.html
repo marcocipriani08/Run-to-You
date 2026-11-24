@@ -2212,8 +2212,9 @@ const VG = (() => {
 
   // ---------- the ending: envelope, cake with salamini, card with the dedication ----------
   const DEDICA = {
-    title: 'Buon compleanno!',
-    text: 'Tanti auguri Falconcino. Affrontare questa avventura insieme a te mi ha fatto venire voglia di viverne altre mille, e di affrontarle insieme come se fossero un gioco. Ma nel frattempo mangiamoci un salamino e festeggiamo!',
+    title: 'Al falcone stancone',
+    // a poem: one verse per line (\n); plain prose without \n is still split by the width of the card
+    text: 'O falcone mio falcone\na che pensi? al tuo croccone?\nio ti vedo un po\' stanchina\nse la notte si avvicina.\nma il falcotto mio un po\' stanco\nsi alzerà di punto in bianco\ne comincerà a saltare\nper venirmi qui a salvare.',
     sign: 'Il Crocco'
   };
   // the letter: same opening as in Memory Lane (the envelope arrives, opens, the paper unfolds, lines written by hand)
@@ -2232,7 +2233,7 @@ const VG = (() => {
         <p class="env-hint">Per El Falcon · tocca per aprire</p>
       </div>
       <canvas id="end-cake" width="260" height="140"></canvas>
-      <div class="end-card"><h2>${DEDICA.title}</h2><p>${DEDICA.text}</p><div class="sign">${DEDICA.sign}</div></div>
+      <div class="end-card"><h2>${DEDICA.title}</h2><p${DEDICA.text.includes('\n') ? ' class="poem"' : ''}>${DEDICA.text.split('\n').join('<br>')}</p><div class="sign">${DEDICA.sign}</div></div>
       <p id="end-stats"></p>
       <div id="end-btns"></div>`;
     (byId('app') || document.body).appendChild(box);
@@ -2245,11 +2246,16 @@ const VG = (() => {
     const writeLines = card => {
       const p = card.querySelector('p'), h2 = card.querySelector('h2'), sign = card.querySelector('.sign');
       if (!p || p.dataset.lined) return; p.dataset.lined = '1';
+      if (DEDICA.text.includes('\n')) {
+        // a poem: each verse is its own line, written one after the other
+        p.innerHTML = DEDICA.text.split('\n').map(v => `<span class="ln">${v}</span>`).join('');
+      } else {
       const words = p.textContent.trim().split(/\s+/);
       p.innerHTML = words.map(w => `<span class="w">${w}</span>`).join(' ');
       const lines = []; let top = null;
       p.querySelectorAll('.w').forEach(w => { if (w.offsetTop !== top) { lines.push([]); top = w.offsetTop; } lines[lines.length - 1].push(w.textContent); });
       p.innerHTML = lines.map(l => `<span class="ln">${l.join(' ')}</span>`).join('');
+      }
       let t = 0.5; // after the title
       const per = REDUCED ? 0 : 0.011; // seconds per letter
       p.querySelectorAll('.ln').forEach(ln => { const d = Math.max(0.2, ln.textContent.length * per); ln.style.animation = REDUCED ? 'none' : `writeLine ${d}s linear ${t}s both`; t += d + 0.04; });
