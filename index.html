@@ -7012,8 +7012,15 @@ const HR_DATA = (() => {
     cv.style.width = img.width * 4 + 'px'; cv.style.height = img.height * 4 + 'px';
   }
   // ---- the home: the first stage at sunset going by (so it follows the first city of every copy), the road, and on the
-  // right El Falcon and Il Crocco running side by side; she has the Album under her arm with its «Per te» tag. Now and
+  // right El Falcon and Il Crocco running side by side; he carries the Album in his hand with its «Per te» tag. Now and
   // then a suitcase comes along the road and they jump it, one after the other; she lands with a little heart.
+  // «Per te» on the tag: font size per pixel of tag width, measured in the hand font (until it has loaded: a safe guess)
+  function homeTagFont() {
+    const ready = document.fonts && document.fonts.check('700 20px Caveat');
+    if (!ready) { setTimeout(() => { HOME.tagFont = 0; }, 400); return 0.36; }
+    const m = document.createElement('canvas').getContext('2d'); m.font = '700 100px Caveat';
+    return Math.min(0.5, 100 / m.measureText('Per te').width * 0.92);
+  }
   const HOME = { t: 0, ob: null, next: 2.2, jf: { y: 0, vy: 0, on: false }, jk: { y: 0, vy: 0, on: false }, hearts: [], dust: [] };
   function drawHome(c, dt) {
     const H = HOME; H.t += dt; G.t += dt; G.cam += dt * 34;
@@ -7032,7 +7039,7 @@ const HR_DATA = (() => {
       R(c, X, gy, 16, 4, g.top); R(c, X, gy + 4, 16, 1, g.top2);
     }
     R(c, 0, gy - 1, W, 1, 'rgba(20,12,32,.55)');
-    const fx = Math.round(W * 0.8), kx = Math.round(W * 0.63);
+    const fx = Math.round(W * 0.8), kx = Math.round(W * 0.58);   // room between them for the Album he carries
     // the suitcase on the road, and their jumps
     if (!H.ob && H.t > H.next) H.ob = { x: W + 20 };
     const jump = (j, x) => { if (H.ob && !j.on && j.y === 0 && H.ob.x - x < 34 && H.ob.x - x > 0) { j.on = true; j.vy = -250; } };
@@ -7053,15 +7060,18 @@ const HR_DATA = (() => {
       c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(x, gy, 13 - Math.min(6, -j.y / 6), 2.4, 0, 0, 7); c.fill();
       c.drawImage(img, Math.round(x - img.width * K / 2), Math.round(gy - img.height * K + j.y), img.width * K, img.height * K);
     };
-    draw(VG.crocco('right', fr(H.jk)), kx, H.jk);
-    draw(VG.falcon('right', fr(H.jf)), fx, H.jf);
-    // the Album under her arm (behind her), tied with the yellow ribbon, and the «Per te» tag swinging from it
-    { const ax = fx - 25, ay = Math.round(gy - 24 + H.jf.y), sw = Math.round(Math.sin(H.t * 7) * 1.5); // at her hip, behind her
+    // the Album in Il Crocco's hand, tied with the yellow ribbon, and the «Per te» tag swinging from it.
+    // It is drawn before him, so his front hand (unchanged sprite) stays in front of its edge: he holds it
+    { const ax = kx + 10, ay = Math.round(gy - 25 + H.jk.y), sw = Math.round(Math.sin(H.t * 7) * 1.5);
       R(c, ax - 1, ay - 1, 14, 11, '#1a1024'); R(c, ax, ay, 12, 9, '#c0392b'); R(c, ax + 1, ay + 1, 10, 1, '#e9b52a'); R(c, ax + 1, ay + 7, 10, 1, '#e9b52a');
       R(c, ax + 5, ay, 2, 9, '#ffd84a'); R(c, ax, ay + 4, 12, 1, '#ffd84a'); R(c, ax + 4, ay - 2, 4, 2, '#ffd84a');
-      const tx = ax - 6 + sw, ty = ay + 12; R(c, ax + 1, ay + 9, 1, 3, '#2a1a2e');
-      R(c, tx - 1, ty - 1, 18, 9, '#2a1a2e'); R(c, tx, ty, 16, 7, '#fff6e0'); R(c, tx + 1, ty + 1, 1, 1, '#c9b89c');
-      st.text('Per te', tx + 8.5, ty + 3.6, { size: Math.max(9, 3.3 * st.SCALE), col: '#2a1a2e', align: 'center', font: 'hand', weight: 700, shadow: false }); }
+      // the tag: a little bigger than before, and the writing fills it
+      const TW = 21, TH = 9, tx = ax - 2 + sw, ty = ay + 12; R(c, ax + 9, ay + 9, 1, 3, '#2a1a2e');
+      R(c, tx - 1, ty - 1, TW + 2, TH + 2, '#2a1a2e'); R(c, tx, ty, TW, TH, '#fff6e0'); R(c, tx + 1, ty + 1, 1, 1, '#c9b89c');
+      H.tagFont = H.tagFont || homeTagFont();
+      st.text('Per te', tx + TW / 2 + 0.5, ty + TH / 2 + 0.3, { size: Math.max(9, H.tagFont * (TW - 2) * st.SCALE), col: '#2a1a2e', align: 'center', font: 'hand', weight: 700, shadow: false }); }
+    draw(VG.crocco('right', fr(H.jk)), kx, H.jk);
+    draw(VG.falcon('right', fr(H.jf)), fx, H.jf);
     // the little hearts when she lands
     for (const h of H.hearts) { h.t -= dt; h.y -= dt * 18; const img = VG.item('heart'); c.globalAlpha = clamp(h.t, 0, 1); c.drawImage(img, Math.round(h.x), Math.round(h.y)); }
     c.globalAlpha = 1; H.hearts = H.hearts.filter(h => h.t > 0);
