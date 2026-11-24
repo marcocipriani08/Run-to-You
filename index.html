@@ -3348,7 +3348,7 @@ const HR_DATA = (() => {
       outro: [['grigio', 'Il Crocco è convocato d\'urgenza. A Berlino.'], ['crocco', 'Falcotto, l\'Album! Continua a riempirlo!'], ['falcon', 'Crocco!']] },
     { id: 'berlino', theme: T.berlino, seq: ['start', 'sign', 'egroup', 'tough', 'valigie', 'tk_high', 'pioggia', 'sign', 'gap4', 'low2', 'powerM', 'cp', 'powerG', 'shoes_run', 'tough', 'pitplats', 'sign', 'tk_enemy', 'chase', 'flyers', 'gap6', 'sign', 'tk_pad', 'pioggia', 'boss', 'fin'],
       intro: [['falcon', 'Tieni duro, Crocco. Arrivo.'], ['falcon', 'Berlino è grande, ma il Crocco lo trovo.']],
-      outro: [['va', 'Buonasera. Qui il Dott. Valore Aggiunto.'], ['va', 'Il Crocco crea valore per noi, adesso. Se lo rivuoi, vieni a prenderlo: Vienna, 31 dicembre.'], ['falcon', 'A mezzanotte sarà libero.']] },
+      outro: [['va', 'Buonasera. Ti ricordi di me? Il Dott. Valore Aggiunto.'], ['va', 'Il Crocco crea valore per noi, adesso. Se lo rivuoi, vieni a prenderlo: Vienna, 31 dicembre.'], ['falcon', 'A mezzanotte sarà libero.']] },
     { id: 'vienna', theme: T.vienna, seq: ['start', 'enemy1', 'tough', 'low1', 'blocks', 'tk_pad', 'swoop1', 'gap4', 'egroup', 'powerH', 'cp', 'powerG', 'shoes_run', 'tough', 'fallers', 'low2', 'tk_high', 'pitplats', 'chase_long', 'gap6', 'powerM', 'valigie2', 'tk_enemy', 'hop2', 'pioggia', 'boss', 'fin'],
       intro: [['narr', 'Vienna, 31 dicembre. Mancano pochi minuti a mezzanotte.'], ['falcon', 'Il Crocco è laggiù, sotto il Duomo.'], ['falcon', 'Prima di mezzanotte è libero. Arrivo, Crocco.']],
       outro: [['crocco', 'Lo sapevo che arrivavi.'], ['falcon', 'Buon anno, Crocco.']] } // (the end of Vienna is written out in finishLevel: freeing him, midnight, the Album)
@@ -6681,12 +6681,13 @@ const HR_DATA = (() => {
   VG.SPEAKERS.grigio = { name: 'Consulente Grigio', col: '#c9bfe0', look: 'grigio' };
   VG.SPEAKERS.va = { name: 'Dott. Valore Aggiunto', col: '#ff6b57', look: 'vaBoss' };
   const INTRO_KEY = 'runtoyou_intro_seen';
-  const PHASES = ['work', 'c1', 'c2', 'c3', 'sigh', 'mail', 'parcel', 'reveal', 'album', 'albumClose', 'think', 'stand', 'escape', 'out', 'title'];
+  const PHASES = ['work', 'c1', 'c2', 'c3', 'sigh', 'mail', 'parcel', 'reveal', 'album', 'albumClose', 'hush', 'door', 'steps', 'versus', 'face', 'stand', 'escape', 'out', 'title'];
   const SHOUTS = ['Dobbiamo creare valore!', 'Torna alla scrivania!', 'La call inizia tra cinque minuti!', 'Chi firma il report?!'];
   // the shape of the scene in game pixels (W = st.VW), shared by the timing and the drawing
   const IN = {
     FROM_LEFT: { c2: true, mail: true },        // c1 and c3 come from the right, c2 and the mail from the left
     RUN: 175, OUT_RUN: 120, CHASE: 130, EXIT: 190, GAP: 0.8, SHOUT: 2.1, LEAD: 0.25,
+    bossDoor: W => Math.max(34, Math.round(W * 0.09)), bossStop: W => Math.max(64, Math.round(W * 0.27)),   // the door on the left (far enough in for the two Consulenti beside it), where the boss stops
     deskX: W => Math.round(W * 0.5), doorX: W => Math.round(W * 2.1), pileX: W => Math.round(W * 1.15),
     stop: (W, left) => Math.round(W * 0.5) + (left ? -68 : 44),
     // seconds from the door until the office has gone off the left edge (then the camera stops)
@@ -6743,8 +6744,13 @@ const HR_DATA = (() => {
         ['crocco', 'Lungo la strada qualcuno proverà a fermarti: saltagli in testa e ti ridarà i nostri ricordi. Attaccali all\'Album: nell\'ultima pagina ti ho lasciato una cosa, ma è una sorpresa per dopo.']]);
       await step('albumClose', 500);
       await say([['falcon', 'E il report?']]);
-      await step('think', 2600);
-      await say([['falcon', 'Il report può aspettare.']]);
+      // the Dott. Valore Aggiunto: a moment of his own (as in the base)
+      Audio.stop(); await step('hush', 1100);                       // the music stops, the lights flicker, the rain stops
+      await step('door', 1300);                                    // the door bursts open: only a black shape against the light
+      Audio.play('boss'); await step('steps', 1700);               // three heavy steps, his colours come in
+      await step('versus', 2600);                                  // the screen splits: he and El Falcon face to face
+      await step('face', 200);
+      await say([['va', 'Dove credi di andare? Le tue giornate sono mie.'], ['va', 'Il valore si crea alla scrivania, anche a Capodanno. Da qui non si scappa.'], ['falcon', 'Ah sì? Io non credo proprio!']]);
       await step('stand', 700);
       if (I.skipped) return;
       Audio.sfx('dash'); Audio.play('adventure');
@@ -6797,12 +6803,12 @@ const HR_DATA = (() => {
     for (const wx of [14, Math.round(W * 0.74), Math.round(W * 1.25), Math.round(W * 1.72)]) {
       const x0 = X(wx); if (x0 < -70 || x0 > W + 10) continue;
       R(c, x0, 16, 64, 46, '#3a3f4c'); R(c, x0 + 2, 18, 60, 42, '#8f9bb0');
-      for (let i = 0; i < 10; i++) { const ry = (t * 80 + i * 19 + wx) % 17; R(c, x0 + 4 + (i * 13 + wx) % 56, 39 + ry, 1, 4, '#c9d2e2'); }
+      if (!['hush', 'door'].includes(ph)) for (let i = 0; i < 10; i++) { const ry = (t * 80 + i * 19 + wx) % 17; R(c, x0 + 4 + (i * 13 + wx) % 56, 39 + ry, 1, 4, '#c9d2e2'); }
       for (let y = 18; y < 37; y += 3) R(c, x0 + 2, y, 60, 2, '#d8dce6'); R(c, x0 + 2, 38, 60, 1, '#3a3f4c');   // blinds half down: slats on top, rain below R(c, x0 + 31, 18, 2, 42, '#3a3f4c');
     }
     const cx = X(Math.round(W * 0.3)), cy = 28; c.fillStyle = '#2a2d36'; c.beginPath(); c.arc(cx, cy, 11, 0, 7); c.fill(); c.fillStyle = '#f6f2ea'; c.beginPath(); c.arc(cx, cy, 9, 0, 7); c.fill();
     const a1 = t * 2 * Math.PI / 6, a2 = t * 2 * Math.PI / 60; c.strokeStyle = '#2a2d36'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.sin(a1) * 7, cy - Math.cos(a1) * 7); c.stroke(); c.lineWidth = 2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.sin(a2) * 5, cy - Math.cos(a2) * 5); c.stroke();
-    if (!after('escape')) { const s = Math.floor(t); if (s !== I.tick) { I.tick = s; Audio.sfx('tap'); } }
+    if (!after('escape') && !after('hush')) { const s = Math.floor(t); if (s !== I.tick) { I.tick = s; Audio.sfx('tap'); } }
     for (const ox of [W * 0.95, W * 1.55]) { const x0 = X(ox); if (x0 < -60 || x0 > W + 60) continue; R(c, x0 - 30, gy - 26, 60, 4, '#2a1a2e'); R(c, x0 - 29, gy - 25, 58, 3, '#9c6b3e'); R(c, x0 - 27, gy - 22, 4, 22, '#6b4a2e'); R(c, x0 + 23, gy - 22, 4, 22, '#6b4a2e'); R(c, x0 - 20, gy - 38, 16, 12, '#2a2d36'); R(c, x0 - 19, gy - 37, 14, 9, '#4fb3e8'); }
     { const x0 = X(W * 1.35); R(c, x0 - 5, gy - 34, 10, 14, '#bfe3f2'); R(c, x0 - 6, gy - 20, 12, 20, '#e8e4f0'); R(c, x0 - 6, gy - 20, 12, 1, '#2a1a2e'); }
     // the street outside (in colour), behind the door: long enough for the whole chase
@@ -6812,6 +6818,11 @@ const HR_DATA = (() => {
       R(c, dx - 2, gy - 62, 34, 62, '#2a2d36'); R(c, dx, gy - 60, 30, 60, '#4a4e5c');
       R(c, dx, gy - 60, Math.round(30 * (1 - open * 0.8)), 60, '#8a6a44'); R(c, dx + Math.round(30 * (1 - open * 0.8)) - 4, gy - 32, 2, 4, '#ffd84a');
       R(c, dx + 2, gy - 72, 26, 8, '#2f8a4a'); st.text('USCITA', dx + 15, gy - 68, { size: Math.max(8, 3 * st.SCALE), col: '#eaffea', align: 'center', font: 'num', shadow: false }); } }
+    // the door of the room, on the left: the Dott. Valore Aggiunto comes in from here
+    { const dx = X(IN.bossDoor(W)); if (dx > -40) { const open = after('door') ? (ph === 'door' ? ease(pt / 0.25) : 1) : 0;
+      R(c, dx - 16, gy - 62, 32, 62, '#2a2d36');
+      if (open > 0) { c.globalAlpha = ph === 'door' ? 1 : 0.6; R(c, dx - 14, gy - 60, 28, 60, '#fff6e0'); c.globalAlpha = 1; }
+      R(c, dx - 14, gy - 60, Math.round(28 * (1 - open * 0.85)), 60, '#6b5a44'); R(c, dx - 14 + Math.round(28 * (1 - open * 0.85)) - 4, gy - 32, 2, 4, '#c9bfe0'); } }
     // floor
     R(c, 0, gy, W, H - gy, '#4a4e5c'); for (let x = -(cam % 16); x < W; x += 16) R(c, Math.round(x), gy, 1, H - gy, '#41444f'); R(c, 0, gy, W, 1, '#2a2d36');
     if (outside) { const x0 = X(doorX + 32); R(c, x0, gy, W * 3, H - gy, '#c9b48a'); R(c, x0, gy, W * 3, 1, '#8a7a5a'); }
@@ -6823,10 +6834,11 @@ const HR_DATA = (() => {
       let img = VG.falcon('down');
       // she turns to the Consulente when he is close, and back to the screen when he goes
       if (visitor && ((I.sub === 'in' && I.st > 0.5) || I.sub === 'stand')) img = VG.falcon(vLeft ? 'left' : 'right');
-      if (ph === 'think') { const k = Math.floor(pt / 0.65); img = VG.falcon(k === 1 ? 'up' : k === 2 ? 'left' : k >= 3 ? 'right' : 'down'); }
+      if (['door', 'steps', 'versus', 'face'].includes(ph)) img = VG.falcon('left');
       if (ph === 'stand') img = VG.falcon('right');
       big(img, dX - 2, gy - 14 + typing + sink - (ph === 'stand' ? Math.min(8, pt * 30) : 0));
       if (ph === 'sigh' && pt > 0.4 && pt < 1.3) { R(c, dX + 10, gy - 48 - Math.round((pt - 0.4) * 12), 3, 2, 'rgba(255,255,255,.8)'); R(c, dX + 13, gy - 51 - Math.round((pt - 0.4) * 12), 2, 2, 'rgba(255,255,255,.6)'); beat('sigh', () => Audio.sfx('error')); }
+      if (ph === 'door' && pt > 0.3) st.text('!', dX + 14, gy - 58, { size: Math.max(16, 7 * st.SCALE), col: '#ffd84a', align: 'center', stroke: '#1a1024', shadow: false });
       if (ph === 'think' && pt < 1.9) st.text('…', dX + 14, gy - 58, { size: Math.max(14, 6 * st.SCALE), col: '#fff6e0', align: 'center', stroke: '#1a1024', shadow: false });
       if (ph === 'parcel' && pt > 0.2) st.text(I.sub === 'open' ? '!' : '?', dX + 14, gy - 58 - (I.sub === 'open' ? 0 : Math.round(Math.sin(t * 4) * 1.5)), { size: Math.max(16, 7 * st.SCALE), col: '#ffd84a', align: 'center', stroke: '#1a1024', shadow: false });
     }
@@ -6846,7 +6858,7 @@ const HR_DATA = (() => {
     // the pile of files in the corridor that she jumps
     { const x0 = X(pileX); for (let i = 0; i < 6; i++) R(c, x0 - 8, gy - 2 - i * 2, 16, 2, i % 2 ? '#e8e4f0' : '#f6f2ea'); R(c, x0 - 8, gy - 13, 16, 1, '#2a1a2e'); }
     // the Consulenti who come to her desk, from the right (c1, c3) and from the left (c2, the mail)
-    const gl = humanoidSprite('grigio', LOOKS.grigio);
+    const gl = humanoidSprite('grigio', LOOKS.grigio), bl = humanoidSprite('vaBoss', LOOKS.vaBoss);
     if (visitor) {
       const stop = IN.stop(W, vLeft), edge = vLeft ? -20 : W + 20, dir = vLeft ? -1 : 1;   // dir: the side he goes back to
       const gx = I.sub === 'in' ? edge + (stop - edge) * ease(I.st / 1.3) : I.sub === 'out' ? stop + dir * I.st * IN.EXIT : stop;
@@ -6872,16 +6884,80 @@ const HR_DATA = (() => {
         const k = outT - outF - IN.LEAD - i * IN.GAP; if (k < 0) continue;
         if (i === 0) beat('shout', () => Audio.sfx('warn'));
         const sx2 = Math.round(-18 + k * IN.CHASE); if (sx2 > W + 30) continue;
-        big(gl[Math.floor(t * 10 + i) % 2 ? 'a' : 'right'], sx2, gy + 1);
+        big((i === 3 ? bl : gl)[Math.floor(t * 10 + i) % 2 ? 'a' : 'right'], sx2, gy + 1); // the last one is the Dott. Valore Aggiunto
         if (k < IN.SHOUT) {
           // the shout stays over his head, all inside the screen, and fades only at the end
-          const sh = SHOUTS[i % SHOUTS.length], hw = sh.length * sz * 0.28 / st.SCALE;
+          const sh = i === 3 ? 'Fermate quella corsa!' : SHOUTS[i % SHOUTS.length], hw = sh.length * sz * 0.28 / st.SCALE;
           st.text(sh, clamp(sx2, hw + 4, W - hw - 4), gy - 46 - (i % 2) * 14, { size: sz, col: '#fff6e0', align: 'center', stroke: '#1a1024', shadow: false, alpha: clamp(Math.min(k * 8, (IN.SHOUT - k) * 4), 0, 1) });
         }
       }
     }
+    // two Consulenti to attention beside the door, as soon as it opens (grey, like the room)
+    if (after('door') && !after('escape')) { const d0 = X(IN.bossDoor(W)); big(gl.down_stand, d0 - 22, gy + 1); big(gl.down_stand, d0 + 22, gy + 1); }
     // grey until she is out: the colours drain away with a saturation layer
     if (I.grey > 0.01) { c.save(); c.globalCompositeOperation = 'saturation'; c.globalAlpha = I.grey; c.fillStyle = '#808080'; c.fillRect(0, 0, W, H); c.restore(); }
+    // ---- the Dott. Valore Aggiunto's moment, drawn over the grey: he is always in full colour (from the base)
+    if (after('hush') && !after('escape')) {
+      // the lights flicker
+      if (ph === 'hush') { const f = (Math.floor(pt * 14) % 3 === 0) || (pt > 0.5 && pt < 0.62); if (f) { c.globalAlpha = 0.55; R(c, 0, 0, W, H, '#0b0816'); c.globalAlpha = 1; } beat('flick', () => Audio.sfx('error')); }
+      if (ph === 'door') beat('thunder', () => { Audio.sfx('block'); Audio.sfx('door'); G.shake = 0.35; });
+      const d0 = X(IN.bossDoor(W)), d1 = X(IN.bossStop(W));
+      // a black shape in the doorway, then three heavy steps towards her while his colours come in
+      let bx = d0, col = 0, step = 0;
+      if (ph === 'steps') { const k = clamp(pt / 1.5, 0, 1), s3 = Math.min(2, Math.floor(k * 3)), u = clamp(k * 3 - s3, 0, 1); bx = d0 + (d1 - d0) * ((s3 + ease(u)) / 3); col = k; step = u < 0.5 ? 1 : 0;
+        for (let i = 0; i < 3; i++) if (k * 3 >= i + 0.55) beat('step' + i, () => { Audio.sfx('block'); G.shake = 0.18; }); }
+      else if (after('versus')) { bx = d1; col = 1; }
+      const bimg = bl[ph === 'steps' && step ? 'a' : 'right'];
+      if (ph !== 'versus') {
+        big(bimg, Math.round(bx), gy + 1);
+        if (col < 1) { // the black shape: the same sprite, filled black, fading into the colours
+          const o = document.createElement('canvas'); o.width = bimg.width; o.height = bimg.height; const g2 = o.getContext('2d');
+          g2.drawImage(bimg, 0, 0); g2.globalCompositeOperation = 'source-in'; g2.fillStyle = '#0b0816'; g2.fillRect(0, 0, o.width, o.height);
+          c.globalAlpha = 1 - col; big(o, Math.round(bx), gy + 1); c.globalAlpha = 1;
+        }
+      }
+      // the cut between the two halves: a crackling lightning bolt, and the «VS» slammed on top of it
+      const vsClash = (pt, out) => {
+        const a0 = clamp((pt - 0.35) / 0.12, 0, 1); out = clamp(out * 3, 0, 1); if (out >= 1) return; // when the halves part it goes first
+        c.globalAlpha = 1 - out;
+        // the bolt: a zigzag along the cut, drawn in square pixels (dark edge, yellow, white heart); it re-crackles
+        const seed = Math.floor(t * 14), N = 14, pts = [];
+        for (let i = 0; i <= N; i++) { const u = i / N, j = i === 0 || i === N ? 0 : ((Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453) % 1); pts.push([W * (0.6 - 0.2 * u) + (i % 2 ? 1 : -1) * (4 + Math.abs(j) * 5), H * u]); }
+        const dots = (sz, col) => { for (let i = 0; i < N; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], n = Math.ceil(Math.hypot(x1 - x0, y1 - y0)); for (let s = 0; s <= n; s++) R(c, Math.round(x0 + (x1 - x0) * s / n - sz / 2), Math.round(y0 + (y1 - y0) * s / n - sz / 2), sz, sz, col); } };
+        dots(7, '#1a1024'); dots(4, '#ffd84a'); dots(2, '#fff6e0');
+        // the moment it strikes: a white flash on the whole screen
+        if (pt < 0.55) { c.globalAlpha = (1 - out) * 0.75 * (1 - clamp((pt - 0.35) / 0.2, 0, 1)); R(c, 0, 0, W, H, '#fff6e0'); c.globalAlpha = 1 - out; }
+        // the «VS»: slammed in from big to its size, a spiky burst behind, chunky pixel letters, slanted
+        const cx = W * 0.5, cy = H * 0.5, sc = 1 + 1.4 * (1 - a0) * (1 - a0);
+        c.save(); c.translate(cx, cy); c.scale(sc, sc);
+        c.save(); c.rotate(t * 0.8);
+        for (const [r0, r1, col] of [[34, 48, '#1a1024'], [30, 43, '#ff6b57'], [22, 33, '#ffd84a']]) { c.beginPath(); for (let i = 0; i < 24; i++) { const an = i * Math.PI / 12, rr = i % 2 ? r0 : r1; c.lineTo(Math.cos(an) * rr, Math.sin(an) * rr * 0.8); } c.closePath(); c.fillStyle = col; c.fill(); }
+        c.restore();
+        c.rotate(-0.14); c.font = '700 40px "Pixelify Sans", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+        c.lineWidth = 9; c.strokeStyle = '#1a1024'; c.strokeText('VS', 3, 4); c.fillStyle = '#7a1f2b'; c.fillText('VS', 3, 4);
+        c.strokeText('VS', 0, 0);
+        const gr = c.createLinearGradient(0, -14, 0, 14); gr.addColorStop(0, '#fff6a0'); gr.addColorStop(0.45, '#ffd84a'); gr.addColorStop(1, '#ff8a3c');
+        c.fillStyle = gr; c.fillText('VS', 0, 0);
+        c.restore(); c.globalAlpha = 1;
+      };
+      // face to face: the screen splits on the diagonal, he big with his tag in red, El Falcon on the other side in blue
+      if (ph === 'versus') {
+        if (pt > 0.35) beat('vs', () => { Audio.sfx('explode'); Audio.sfx('ticket'); G.shake = 0.35; });
+        const k = ease(clamp(pt / 0.35, 0, 1)), out = pt > 2.25 ? ease((pt - 2.25) / 0.3) : 0, sh = Math.round((1 - k + out) * W);
+        c.save(); c.translate(-sh, 0); c.beginPath(); c.moveTo(0, 0); c.lineTo(W * 0.6, 0); c.lineTo(W * 0.4, H); c.lineTo(0, H); c.closePath(); c.fillStyle = '#ff6b57'; c.fill();
+        c.globalAlpha = 0.18; for (let i = 0; i < 9; i++) R(c, 0, i * 12 + Math.round(t * 40) % 12, W, 3, '#1a1024'); c.globalAlpha = 1;
+        const bb = bl.down_stand; c.drawImage(bb, Math.round(W * 0.2 - bb.width * 2), Math.round(H * 0.5 - bb.height * 2), bb.width * 4, bb.height * 4); c.restore();
+        c.save(); c.translate(sh, 0); c.beginPath(); c.moveTo(W * 0.6 - 1, 0); c.lineTo(W, 0); c.lineTo(W, H); c.lineTo(W * 0.4 - 1, H); c.closePath(); c.fillStyle = '#2a2145'; c.fill();
+        const ab = VG.falcon('down'); c.drawImage(ab, Math.round(W * 0.8 - ab.width * 1.5), Math.round(H * 0.62 - ab.height * 1.5), ab.width * 3, ab.height * 3); c.restore();
+        // the tag: his name and his title
+        if (k >= 1 && !out) {
+          const tx = Math.round(W * 0.2), ty = Math.round(H * 0.16);
+          st.text('Il Dott. Valore Aggiunto', tx, ty, { size: Math.max(18, 7.5 * st.SCALE), col: '#fff6e0', align: 'center', stroke: '#1a1024' });
+          st.text('Consulente di Valore Aggiunto', tx, ty + 10, { size: Math.max(12, 4.4 * st.SCALE), col: '#ffd84a', align: 'center', stroke: '#1a1024', shadow: false });
+        }
+        if (k >= 1) vsClash(pt, out);
+      }
+    }
     // …but the Album is in colour: the only colourful thing in the office
     // the Album: the room goes dark, light from the parcel, the Album rises turning once; then it stays there, closed,
     // glowing, while Il Crocco speaks; at the end it comes down into her hands
