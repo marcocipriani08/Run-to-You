@@ -5263,6 +5263,9 @@ const HR_DATA = (() => {
   const cardsOf = L => STAGE_CARDS[L.id] || [];
   const COLLECTION = LEVELS.flatMap(cardsOf);
   const isPC = id => id.startsWith('t_');
+  // Ios's caption, only in this game (the shared postcards file is left alone): the custode is not in Run to You,
+  // the amphitheatre is (Marco's choice)
+  if (POSTCARDS.t_ios) POSTCARDS.t_ios.cap = 'Panorami infiniti, girati in quad prima del tramonto. Nemmeno l\'anfiteatro aveva mai visto guidare così. Il Crocco nemmeno, e si è tenuto forte.';
   const cardName = id => isPC(id) ? POSTCARDS[id].name : PEOPLE[id].name;
   const cardCap = id => isPC(id) ? POSTCARDS[id].cap : PEOPLE[id].cap;
   const paintCard = (cv, id) => { if (isPC(id)) Postcard.paint(cv, id); else { const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 96, 64); PEOPLE[id].paint(c); } };
