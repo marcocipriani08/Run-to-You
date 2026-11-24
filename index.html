@@ -2214,7 +2214,7 @@ const VG = (() => {
   const DEDICA = {
     title: 'Al falcone stancone',
     // a poem: one verse per line (\n); plain prose without \n is still split by the width of the card
-    text: 'O falcone mio falcone\na che pensi? al tuo croccone?\nio ti vedo un po\' stanchina\nse la notte si avvicina.\nma il falcotto mio un po\' stanco\nsi alzerà di punto in bianco\ne comincerà a saltare\nper venirmi qui a salvare.',
+    text: 'O falcone, mio falcone,\na che pensi? Al tuo croccone?\nIo ti vedo un po\' stanchina\nse la notte si avvicina.\nMa il falcotto mio, un po\' stanco,\nsi alzerà di punto in bianco\ne comincerà a saltare\nper venirmi qui a salvare.',
     sign: 'Il Crocco'
   };
   // the letter: same opening as in Memory Lane (the envelope arrives, opens, the paper unfolds, lines written by hand)
@@ -2308,35 +2308,64 @@ const VG = (() => {
       timers.push(setTimeout(() => { box.classList.add('landed'); try { env.focus({ preventScroll: true }); } catch (e) { } }, 780));
     }
     else setTimeout(() => { try { env.focus({ preventScroll: true }); } catch (e) { } }, 50);
-    // the cake scene (same as Viaggettino's ending)
+    // the scene beside the letter: the toast under the stars (the «altro» scene of Memory Lane's base).
+    // The story: the two walk in, the string lights come on, the glasses fill up, «cin!», then fireworks
     const cv2 = byId('end-cake'), c = cv2.getContext('2d'); c.imageSmoothingEnabled = false;
-    const sal = item('salamino', 1, false);
-    const conf = Array.from({ length: REDUCED ? 0 : 60 }, () => ({ x: Math.random() * cv2.width, y: Math.random() * cv2.height, v: 10 + Math.random() * 25, c: pick(['#ffd84a', '#ff6b57', '#7cc6e8', '#f2a3b0', '#7fd18a']) }));
-    let last = performance.now();
+    const px = (c, col, x, y, w, h) => { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w, h); };
+    const bandsAt = (c, cols, y0, h, W) => { const bh = Math.ceil(h / cols.length); cols.forEach((col, i) => px(c, col, 0, y0 + i * bh, W, bh)); };
+    const glow = (c, x, y, r, col) => { for (let k = 4; k >= 1; k--) { c.globalAlpha = 0.045 * (5 - k); c.fillStyle = col; const rr = r * k / 4; for (let yy = -rr; yy <= rr; yy += 2) { const w = Math.round(Math.sqrt(rr * rr - yy * yy)); c.fillRect(Math.round(x - w), Math.round(y + yy), w * 2, 2); } } c.globalAlpha = 1; };
+    const big2 = (c, img, x, foot) => c.drawImage(img, Math.round(x - img.width), Math.round(foot - img.height * 2), img.width * 2, img.height * 2);
+    // the two walk in from the two sides and stop by the table, then hop in turn (sc: seconds since the scene started)
+    const pairWalk = (W, t, sc, foot, dur, hopFrom) => {
+      const k = Math.min(1, sc / dur), ease = 1 - Math.pow(1 - k, 2), walking = k < 1, fr = walking ? (Math.floor(t * 7) % 2 ? 'a' : 'b') : 'stand';
+      const hop = i => { if (REDUCED || walking || sc < hopFrom) return 0; const p = (t * 0.8 + i * 0.5) % 1; return p < 0.18 ? -Math.round(Math.sin(p / 0.18 * Math.PI) * 5) : 0; };
+      const xa = -24 + (W / 2 - 84 + 24) * ease, xb = W + 24 - (W + 24 - (W / 2 + 84)) * ease;
+      [[xa, falcon('right', fr), 0], [xb, crocco('left', fr), 1]].forEach(([x, img, i]) => { c.globalAlpha = 0.3; px(c, '#1a1024', x - 13, foot - 1, 26, 3); c.globalAlpha = 1; big2(c, img, x, foot + hop(i)); });
+    };
+    let fw = [], fwT = 0, bigBurst = false;
+    const toast = (W, H, t, dt, sc) => {
+      const floor = 100, ramp = (a, b) => Math.max(0, Math.min(1, (sc - a) / (b - a)));
+      bandsAt(c, ['#0e0a22', '#120e2a', '#1b1538', '#221a44', '#2a2150'], 0, floor, W);
+      for (let i = 0; i < 40; i++) { const x = (i * 97) % W, y = (i * 37) % 70; px(c, Math.sin(t * (1 + (i % 4) * 0.5) + i) > 0.5 ? '#fff6e0' : 'rgba(255,246,224,.35)', x, y, 1, 1); }
+      if (sc < 1) { fw = []; bigBurst = false; }
+      const burst = (x, y, n, col) => { for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, v = 14 + Math.random() * 14; fw.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 1, col: col || pick(['#ffd84a', '#ff6b57', '#7cc6e8', '#f2a3b0', '#7fd18a']) }); } };
+      // the first big one right after the clink, then more
+      if (!REDUCED && sc > 3.6 && !bigBurst) { bigBurst = true; burst(W / 2, 26, 36, '#ffd84a'); burst(W / 2, 26, 18, '#ff6b57'); fwT = 0.7; }
+      if (!REDUCED && sc > 3.6) { fwT -= dt; if (fwT <= 0) { fwT = 0.6 + Math.random() * 0.8; burst(30 + Math.random() * (W - 60), 14 + Math.random() * 30, 22); } }
+      fw.forEach(p => { p.l -= dt * 0.8; p.vy += 10 * dt; p.x += p.vx * dt; p.y += p.vy * dt; c.globalAlpha = Math.max(0, Math.min(1, p.l)); px(c, p.col, p.x, p.y, 1, 1); }); c.globalAlpha = 1;
+      fw = fw.filter(p => p.l > 0);
+      for (let x = 0; x < W; x++) { const y = Math.round(floor - 14 - 8 * Math.max(0, Math.sin(x * 0.025 + 1)) - 3 * Math.sin(x * 0.09)); px(c, '#1a1530', x, y, 1, floor - y); }
+      bandsAt(c, ['#2a3a3a', '#24332f', '#1e2c28', '#182420'], floor, H - floor, W);
+      px(c, '#3a2a2a', 14, 30, 2, floor - 30); px(c, '#3a2a2a', W - 16, 30, 2, floor - 30);
+      for (let x = 16; x < W - 16; x += 2) px(c, '#3a2a2a', x, 30 + Math.round(Math.sin((x - 16) / (W - 32) * Math.PI) * 12), 2, 1);
+      for (let i = 0; i < 13; i++) { const x = 24 + i * 17, y = 32 + Math.round(Math.sin((x - 16) / (W - 32) * Math.PI) * 12), on = sc > 1.0 + i * 0.08; px(c, on && Math.sin(t * 2.5 + i) > -0.5 ? ['#ffd84a', '#f2a3b0', '#7cc6e8'][i % 3] : '#3a3a4a', x, y, 2, 2); }
+      const cx = W / 2, ty = floor + 2;
+      if (sc > 3.4) glow(c, cx, ty - 20, 38 * ramp(3.4, 4.0), '#fff0a8');
+      px(c, '#5a3822', cx - 34, ty + 8, 4, H - ty - 10); px(c, '#5a3822', cx + 30, ty + 8, 4, H - ty - 10);
+      px(c, '#1a1024', cx - 41, ty - 1, 82, 11); px(c, '#fff6e0', cx - 40, ty, 80, 9); px(c, '#e9e2cf', cx - 40, ty + 7, 80, 2);
+      px(c, '#1a1024', cx + 22, ty - 12, 14, 12); px(c, '#c9d6e3', cx + 23, ty - 11, 12, 11); px(c, '#8fa3b8', cx + 23, ty - 4, 12, 3);
+      px(c, '#1a1024', cx + 25, ty - 26, 8, 15); px(c, '#2f6e4a', cx + 26, ty - 25, 6, 14); px(c, '#ffd84a', cx + 26, ty - 25, 6, 3); px(c, '#ffffff', cx + 27, ty - 18, 4, 4);
+      // the glasses: they fill up, come together for the clink, then keep clinking now and then
+      const fill = ramp(1.8, 2.8);
+      const k = sc < 2.9 ? 0 : sc < 3.4 ? ramp(2.9, 3.4) : REDUCED ? 0 : Math.max(0, Math.sin((sc - 3.4) * 2.2 + Math.PI / 2) * 0.6), d = Math.round(9 - k * 5);
+      [[-1, '#fff0a8'], [1, '#ffe07a']].forEach(([sgn, wine]) => {
+        const x = cx - 6 + sgn * d - 5, tilt = Math.round(sgn * -k * 2), lvl = Math.round(8 * fill);
+        px(c, '#1a1024', x - 1 + tilt, ty - 27, 12, 15); px(c, '#dfe8f2', x + tilt, ty - 26, 10, 13); if (lvl) px(c, wine, x + 1 + tilt, ty - 14 - lvl, 8, lvl);
+        px(c, '#1a1024', x + 3, ty - 13, 4, 11); px(c, '#dfe8f2', x + 4, ty - 13, 2, 11); px(c, '#1a1024', x - 1, ty - 3, 12, 3); px(c, '#dfe8f2', x, ty - 3, 10, 2);
+        if (fill >= 1) for (let i = 0; i < 3; i++) { const p = (t * 0.8 + i / 3 + (sgn > 0 ? .5 : 0)) % 1; px(c, '#ffffff', x + 3 + i * 2 + tilt, ty - 14 - p * 8, 1, 1); }
+      });
+      // «cin!»: a little spark where the glasses touch
+      if (sc > 3.3 && sc < 3.7) { px(c, '#ffffff', cx - 7, ty - 34, 2, 4); px(c, '#ffffff', cx - 12, ty - 32, 3, 1); px(c, '#ffffff', cx - 2, ty - 32, 3, 1); px(c, '#ffd84a', cx - 13, ty - 37, 1, 1); px(c, '#ffd84a', cx, ty - 37, 1, 1); }
+      pairWalk(W, t, sc, H - 8, 1.6, 3.6);
+    };
+    let last = performance.now(), startAt = null;
     const frame = now => {
       if (!document.body.contains(box)) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
-      const W = cv2.width, H = cv2.height;
-      const grd = c.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, '#ff9a6b'); grd.addColorStop(0.55, '#f2a3b0'); grd.addColorStop(0.56, '#3a2a5a'); grd.addColorStop(1, '#2a1f45');
-      c.fillStyle = grd; c.fillRect(0, 0, W, H);
-      c.fillStyle = '#ffd84a'; c.beginPath(); c.arc(W / 2, H * 0.55, 22, Math.PI, 0); c.fill();
-      c.fillStyle = 'rgba(255,216,74,.5)'; for (let i = 0; i < 5; i++) c.fillRect(W / 2 - 30 + i * 3, H * 0.58 + i * 4, 60 - i * 6, 1);
-      c.fillStyle = '#e9c46a'; c.fillRect(W / 2 - 70, H - 34, 140, 8); c.fillStyle = '#6b4a2e'; c.fillRect(W / 2 - 4, H - 26, 8, 26);
-      const cx = W / 2 - 26, cy = H - 60;
-      c.fillStyle = '#fff6e0'; c.fillRect(cx, cy + 10, 52, 16); c.fillStyle = '#f2a3b0'; c.fillRect(cx, cy + 10, 52, 4);
-      for (let i = 0; i < 6; i++) c.fillRect(cx + 2 + i * 9, cy + 14, 4, 3);
-      c.fillStyle = '#e9e2cf'; c.fillRect(cx - 4, cy + 26, 60, 2);
-      for (let i = 0; i < 26; i++) {
-        const row = i < 13 ? 0 : 1, col = i % 13, x = cx + 2 + col * 4, y = cy + 4 + (row ? 3 : 0);
-        c.fillStyle = ['#7cc6e8', '#ffd84a', '#ff6b57', '#7fd18a'][i % 4]; c.fillRect(x, y + (row ? 0 : -3), 1, 6);
-        c.fillStyle = Math.sin(t * 12 + i) > 0 ? '#ffd84a' : '#ffb36b'; c.fillRect(x, y + (row ? -2 : -5), 1, 2);
-      }
-      c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(W / 2 + 50, H - 36, 18, 4, 0, 0, 7); c.fill();
-      for (let i = 0; i < 3; i++) c.drawImage(sal, W / 2 + 36 + i * 9, H - 46 - (i % 2) * 2);
-      c.fillStyle = '#ffd84a'; c.fillRect(W / 2 - 58, H - 46, 5, 10); c.fillStyle = '#ff8a3d'; c.fillRect(W / 2 - 48, H - 46, 5, 10);
-      const f = falcon('right'), k = crocco('left');
-      c.drawImage(f, W / 2 - 100, H - 34 - f.height); c.drawImage(k, W / 2 + 76, H - 34 - k.height);
-      conf.forEach(p => { p.y += p.v * dt; p.x += Math.sin(t * 2 + p.v) * 0.3; if (p.y > H) { p.y = -4; p.x = Math.random() * W; } c.fillStyle = p.c; c.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
+      // the little story of the scene starts the moment the picture shows up beside the letter
+      if (startAt == null && (REDUCED || +getComputedStyle(cv2).opacity > 0.3)) startAt = t;
+      const sc = REDUCED ? 99 : startAt == null ? 0 : t - startAt;
+      toast(cv2.width, cv2.height, t, dt, sc);
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
