@@ -3175,7 +3175,7 @@ const HR_DATA = (() => {
       R(c, cx - 25, g - 6, 50, 6, k); R(c, cx - 24, g - 5, 48, 5, '#e6dcc3'); R(c, cx - 24, g - 5, 48, 1, '#ffffff');
       for (const [dx, h] of [[-18, 10], [-4, 14], [12, 8]]) { R(c, cx + dx - 1, g - 6 - h, 6, h, k); R(c, cx + dx, g - 5 - h, 4, h - 1, '#fbfbf8'); R(c, cx + dx + 3, g - 5 - h, 1, h - 1, '#d9cfb8'); R(c, cx + dx, g - 5 - h, 2, 1, '#cdbf9e'); }
     },
-    cpLine: ['crocco', 'Tieniti forte, Falcotto! Ah no, sono io che mi tengo forte.'],
+    cpLine: ['crocco', 'Tieniti forte, Falcocomero! Ah no, sono io che mi tengo forte.'],
     signs: [],
     boss: { look: 'grigio', name: 'Il Capo dei Consulenti Grigi', throw: 'kpibar' },
     low: ['#c8843a', '#f2e6c4'], // colours of the low banner you slide under
@@ -3345,7 +3345,7 @@ const HR_DATA = (() => {
       outro: [['falcon', 'Arrivata!'], ['crocco', 'In perfetto orario per il tramonto.'], ['crocco', 'Domani Ios. Questa la facciamo insieme: in quad.']] },
     { id: 'ios', theme: T.ios, seq: ['start', 'q_rocks', 'q_ramp', 'q_gap', 'powerM', 'q_run', 'q_tk_ramp', 'q_rocks2', 'q_gap', 'hazard', 'q_rampgap', 'powerH', 'cp', 'q_chase', 'powerG', 'shoes_run', 'q_run', 'q_tk_pit', 'swoop1', 'q_ramp', 'q_rocks2', 'q_tk_rock', 'q_run', 'q_rampgap', 'q_rocks2', 'boss', 'fin'],
       intro: [['falcon', 'Ios, sul quad nero! Guido io.'], ['crocco', 'Io sto dietro e mi tengo forte. Attenta alle rocce, e ai Consulenti: anche sul quad bisogna saltargli in testa.'], ['falcon', 'Ci sono le rampe, però. Tieniti, Crocco.']],
-      outro: [['grigio', 'Il Crocco è convocato d\'urgenza. A Berlino.'], ['crocco', 'Falcotto, l\'Album! Continua a riempirlo!'], ['falcon', 'Crocco!']] },
+      outro: [['grigio', 'Il Crocco è convocato d\'urgenza. A Berlino.'], ['crocco', 'Falconciuffolo, l\'Album! Continua a riempirlo!'], ['falcon', 'Crocco!']] },
     { id: 'berlino', theme: T.berlino, seq: ['start', 'sign', 'egroup', 'tough', 'valigie', 'tk_high', 'pioggia', 'sign', 'gap4', 'low2', 'powerM', 'cp', 'powerG', 'shoes_run', 'tough', 'pitplats', 'sign', 'tk_enemy', 'chase', 'flyers', 'gap6', 'sign', 'tk_pad', 'pioggia', 'boss', 'fin'],
       intro: [['falcon', 'Tieni duro, Crocco. Arrivo.'], ['falcon', 'Berlino è grande, ma il Crocco lo trovo.']],
       outro: [['va', 'Buonasera. Ti ricordi di me? Il Dott. Valore Aggiunto.'], ['va', 'Il Crocco crea valore per noi, adesso. Se lo rivuoi, vieni a prenderlo: Vienna, 31 dicembre.'], ['falcon', 'A mezzanotte sarà libero.']] },
@@ -5468,7 +5468,7 @@ const HR_DATA = (() => {
     conf = VG.confetti(90, st.VW, st.VH);
     await wait(1300); if (sess !== A.sess) return;
     // the little exchange only the first time; after that the Album speaks for itself
-    if (firstTime) { await VG.say([['crocco', 'Album completo, Falcotto! Dodici ricordi, tutti attaccati.'], ['falcon', 'Lo sfogliamo insieme dall\'inizio?']]); if (sess !== A.sess) return; }
+    if (firstTime) { await VG.say([['crocco', 'Album completo, El Falcon! Dodici ricordi, tutti attaccati.'], ['falcon', 'Lo sfogliamo insieme dall\'inizio?']]); if (sess !== A.sess) return; }
     const row = ov2.querySelector('.ab-btns');
     ov2.classList.add('ready'); await wait(VG.REDUCED ? 0 : 450); if (sess !== A.sess) return;
     const b = el('button', 'btn primary letter', 'Sfoglia l\'Album'); b.type = 'button'; b.prepend(el('span', 'seal', '♥')); b.onclick = () => flipAlbum({ keep: opt.midnight }); row.appendChild(b);
@@ -6739,7 +6739,7 @@ const HR_DATA = (() => {
       await say([['falcon', 'Ora lo apro!']]);
       await step('reveal', 3600);
       await step('album', 500);
-      await say([['crocco', 'Falcotto, ti ho organizzato un viaggio. Perché non scappi dall\'ufficio e mi raggiungi a Santorini? Ti aspetto al tramonto, sotto il mulino di Oia.'],
+      await say([['crocco', 'Falconcino, ti ho organizzato un viaggio. Perché non scappi dall\'ufficio e mi raggiungi a Santorini? Ti aspetto al tramonto, sotto il mulino di Oia.'],
         ['crocco', 'Da lì ci facciamo i nostri viaggettini, insieme.'],
         ['crocco', 'Lungo la strada qualcuno proverà a fermarti: saltagli in testa e ti ridarà i nostri ricordi. Attaccali all\'Album: nell\'ultima pagina ti ho lasciato una cosa, ma è una sorpresa per dopo.']]);
       await step('albumClose', 500);
